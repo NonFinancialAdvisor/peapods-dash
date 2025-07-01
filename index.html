@@ -377,9 +377,7 @@ if (Number(p.lending_pair.total_borrow_shares) > 0) {
                   p.liquidation_price_usd !== null &&
                   !isNaN(p.liquidation_price_usd)
                     ? "$ " +
-                      Number(p.liquidation_price_usd).toLocaleString("en-US", {
-                        maximumFractionDigits: 2,
-                      })
+                      formatNumberSmart(p.liquidation_price_usd)
                     : "-",
                   Number(p.vf_apr) ? (p.vf_apr * 100).toFixed(2) + "%" : "-",
                   (isFinite(total_borrowed) ? total_borrowed.toLocaleString("en-US", { maximumFractionDigits: 2 }) : "-") + ` ${p.lending_pair?.asset?.symbol || ""}` + (borrowed_usd ? `<br />($${borrowed_usd.toLocaleString("en-US", { maximumFractionDigits: 2 })})` : ""),
@@ -664,6 +662,39 @@ if (Number(p.lending_pair.total_borrow_shares) > 0) {
       document.getElementById("lending-value-total").textContent =
         "$ " + lending.toLocaleString("en-US", { maximumFractionDigits: 2 });
     };
+
+    function formatNumberSmart(value) {
+      const num = Number(value);
+      const abs = Math.abs(num);
+      let dp;
+
+      // Bepaal aantal decimalen
+      if (abs >= 1000) {
+        dp = 0;
+      } else if (abs >= 100) {
+        dp = 1;
+      } else if (abs >= 1) {
+        dp = 2;
+      } else {
+        const raw = num.toFixed(18);
+        const trimmed = raw.replace(/(?:\.\d*?[1-9])0+$/,'$1').replace(/\.0+$/,'');
+        const decPart = (trimmed.split('.')[1] || '');
+        const minDp = decPart.charAt(0) === '0' ? 3 : 2;
+        const maxDp = Math.min(minDp + 2, 18);
+        dp = Math.min(Math.max(decPart.length, minDp), maxDp);
+      }
+
+      let formatted = num.toLocaleString('en-US', {
+        minimumFractionDigits: dp,
+        maximumFractionDigits: dp
+      });
+
+      if (dp > 0) {
+        formatted = formatted.replace(/(\.[0-9]*?[1-9])0+$/,'$1').replace(/\.0+$/,'');
+      }
+
+      return formatted;
+    }
   </script>
   <div
     style="
